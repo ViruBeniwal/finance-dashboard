@@ -1,0 +1,165 @@
+Build a full-stack Personal Finance Dashboard using React (frontend) + Node.js + Express (backend) + Replit DB (database). This is a real personal finance tool for someone with a salaried job who wants to track income, expenses, savings, and investments — all in one place.
+
+---
+
+## TECH STACK
+
+- Frontend: React (Vite)
+- Backend: Node.js + Express (REST API)
+- Database: Replit DB (@replit/database)
+- Charts: Recharts
+- Styling: Plain CSS (no Tailwind, no component libraries)
+- No TypeScript
+
+---
+
+## DESIGN PHILOSOPHY — CRITICAL, READ CAREFULLY
+
+This dashboard must look like a tool a finance professional actually uses — not an AI-generated website. Study the aesthetic of Linear, Notion, or Stripe Dashboard.
+
+**Color palette — STRICT:**
+- Background: #F5F5F0 (warm off-white page), #FFFFFF (card surfaces)
+- Primary accent: #1A1A2E (deep navy)
+- Secondary accent: #2C5F2E (forest green — for positive/income)
+- Danger/expense: #8B2635 (deep red)
+- Neutral text: #1C1C1C (primary), #6B6B6B (secondary), #9A9A9A (muted)
+- Borders: #E2E2DC (subtle warm gray)
+- Chart colors: ['#2C5F2E', '#8B2635', '#1A4A6B', '#8B6914', '#4A4A8A'] — earthy, professional
+
+**ABSOLUTELY NO:** purple, neon, gradients on backgrounds, glowing cards, glassmorphism, animated blobs, rainbow charts, or anything that looks "AI-generated". No purple. No violet. No indigo. No electric blue. No neon green.
+
+**Typography:** System font stack: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif. Weights: 400 (body), 500 (labels), 600 (headings). No decorative fonts.
+
+**UI feel:**
+- Cards: white background, 1px solid #E2E2DC border, 8px border-radius, no drop shadows (or a very subtle 0 1px 3px rgba(0,0,0,0.06))
+- Spacing: generous, consistent 24px gaps between cards
+- Tables: clean, zebra-striped with #FAFAF7, no heavy borders
+- Buttons: flat, with border, no heavy shadows
+- Numbers in currency: always formatted as ₹X,XX,XXX (Indian format)
+
+---
+
+## FEATURES
+
+### 1. OVERVIEW PAGE (default landing)
+Show a summary row of 4 metric cards at the top:
+- Total Income (this month)
+- Total Expenses (this month)
+- Net Savings (income - expenses)
+- Total Investments (this month)
+
+Below that, show:
+- A bar chart: Monthly income vs expenses vs savings (last 6 months)
+- A donut/pie chart: Expense breakdown by category (this month)
+- A line chart: Savings trend over the last 12 months
+
+### 2. TRANSACTIONS PAGE
+- A filterable, sortable table of all transactions
+- Each row: Date | Description | Category | Type (Income/Expense/Investment/Saving) | Amount
+- Filters: Date range picker, Type (dropdown), Category (dropdown), Search by description
+- Time period quick filters: This Week / This Month / This Quarter / This Year / All Time
+- Add Transaction button → opens a modal form with: Date, Description, Category, Type, Amount, Notes
+- Edit and Delete on each row
+- Bulk delete option (checkboxes)
+
+### 3. BUDGET PAGE
+- Set monthly budget limits per expense category
+- Show a horizontal progress bar per category: Spent vs Budget
+- Color coding: green (< 70%), amber (70-90%), red (> 90%)
+- Add/edit budget limits inline
+
+### 4. INVESTMENTS PAGE
+- Separate table for investment entries: Date | Asset | Type (Mutual Fund, Stocks, FD, PPF, Gold, Other) | Amount | Notes
+- Summary card showing total invested overall and this month
+
+### 5. REPORTS PAGE
+- Month-over-month comparison table (income, expenses, savings, investments)
+- Export to CSV button (client-side, download all transactions)
+
+---
+
+## CATEGORIES
+
+Expense categories: Housing, Food & Dining, Transportation, Utilities, Healthcare, Entertainment, Shopping, Education, Personal Care, EMI/Loan, Subscriptions, Miscellaneous
+
+Income categories: Salary, Freelance, Bonus, Interest, Dividend, Other Income
+
+Investment categories: Mutual Fund, Stocks, FD/RD, PPF/EPF, Gold, Real Estate, Crypto, Other Investment
+
+---
+
+## DATABASE SCHEMA (Replit DB)
+
+Use these key patterns:
+- `transactions` → JSON array of all transaction objects
+- `budgets` → JSON object keyed by category name
+- Each transaction object: { id, date, description, category, type, amount, notes, createdAt }
+
+---
+
+## BACKEND API ROUTES
+GET    /api/transactions          → all transactions (with optional query filters)
+POST   /api/transactions          → add new transaction
+PUT    /api/transactions/:id      → update transaction
+DELETE /api/transactions/:id      → delete transaction
+DELETE /api/transactions          → delete all (for clearing sample data)
+GET    /api/budgets               → get all budgets
+POST   /api/budgets               → set/update budget for a category
+GET    /api/summary               → aggregated stats (monthly totals, category breakdown)
+
+---
+
+## SAMPLE DATA — SEED ON FIRST LOAD
+
+On first launch, if the DB is empty, seed it with 3 months of realistic fake data for an Indian salaried person (₹80,000/month salary):
+- Regular monthly salary income
+- Realistic expenses across all categories (rent, groceries, dining, fuel, subscriptions, etc.)
+- A few investments (SIP mutual fund, some stocks)
+- Occasional bonus income
+
+Show a banner on the UI: "You're viewing sample data. [Clear all sample data →]" button that deletes everything and starts fresh.
+
+---
+
+## NAVIGATION
+
+Left sidebar (fixed, collapsible on mobile):
+- Logo / app name: "Fintrack" (simple wordmark, no icon-heavy logo)
+- Nav links: Overview, Transactions, Budget, Investments, Reports
+
+---
+
+## IMPLEMENTATION NOTES
+
+- All date handling: use plain JS Date, no moment.js
+- Currency formatting: use Intl.NumberFormat for ₹ Indian locale
+- The app should feel snappy — minimal loading states, no unnecessary spinners
+- Error states: show inline error messages, not alert() popups
+- Forms: proper validation with inline error text below fields
+- Mobile responsive: sidebar collapses to bottom nav on mobile
+- No authentication needed — this is a personal local tool
+- Start dev server on port 3000 (backend) and 5173 (frontend Vite)
+
+---
+
+## FOLDER STRUCTURE
+/
+├── server/
+│   ├── index.js
+│   ├── routes/
+│   │   ├── transactions.js
+│   │   ├── budgets.js
+│   │   └── summary.js
+│   └── db.js
+├── client/
+│   ├── src/
+│   │   ├── pages/ (Overview, Transactions, Budget, Investments, Reports)
+│   │   ├── components/ (Sidebar, Modal, Charts, TransactionTable, MetricCard)
+│   │   ├── utils/ (formatCurrency, dateHelpers)
+│   │   └── App.jsx
+│   └── index.html
+└── package.json (root with concurrently to run both)
+
+---
+
+Build this completely, end-to-end, working with real DB persistence. Every page should be functional. Prioritize clean, readable code and a UI that looks like a real professional tool.

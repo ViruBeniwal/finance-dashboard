@@ -1,0 +1,4 @@
+- [API contract sync](api-contract-sync.md) — server route methods/scope must match openapi.yaml + generated client; mismatches break codegen hooks silently.
+- [api-server project refs](api-server-build.md) — after schema/contract changes, force-rebuild tsc project refs or typecheck fails with stale TS2305.
+- [recharts pie sizing](recharts-pie-sizing.md) — give ResponsiveContainer a numeric height + Pie isAnimationActive=false, else pie renders tiny/blank.
+- [sample-data flag lifecycle](sample-data-flag.md) — every data mutation (not just delete-all) must clear the seeded/isSampleData meta flag.

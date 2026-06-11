@@ -1,0 +1,432 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: transactions
+    description: Transaction operations
+  - name: budgets
+    description: Budget operations
+  - name: summary
+    description: Aggregated dashboard statistics
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transactions
+      description: Returns all transactions, optionally filtered.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/TransactionType"
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          description: Inclusive ISO date (YYYY-MM-DD) lower bound.
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          required: false
+          description: Inclusive ISO date (YYYY-MM-DD) upper bound.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Create a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteAllTransactions
+      tags: [transactions]
+      summary: Delete all transactions
+      description: Clears all transactions and budgets (used to clear sample data).
+      responses:
+        "204":
+          description: Deleted
+  /transactions/{id}:
+    put:
+      operationId: updateTransaction
+      tags: [transactions]
+      summary: Update a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteTransaction
+      tags: [transactions]
+      summary: Delete a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /transactions/bulk-delete:
+    post:
+      operationId: bulkDeleteTransactions
+      tags: [transactions]
+      summary: Bulk delete transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkDeleteInput"
+      responses:
+        "204":
+          description: Deleted
+  /budgets:
+    get:
+      operationId: listBudgets
+      tags: [budgets]
+      summary: List budgets
+      description: Returns the monthly budget limit per expense category.
+      responses:
+        "200":
+          description: A list of budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Budget"
+    post:
+      operationId: setBudget
+      tags: [budgets]
+      summary: Set or update a budget
+      description: Sets the monthly limit for an expense category.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetInput"
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /summary:
+    get:
+      operationId: getSummary
+      tags: [summary]
+      summary: Dashboard summary
+      description: Aggregated statistics for the dashboard overview and reports.
+      responses:
+        "200":
+          description: Aggregated stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Summary"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    TransactionType:
+      type: string
+      enum:
+        - Income
+        - Expense
+        - Investment
+        - Saving
+    Transaction:
+      type: object
+      required:
+        - id
+        - date
+        - description
+        - category
+        - type
+        - amount
+        - notes
+        - createdAt
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          description: ISO date (YYYY-MM-DD)
+        description:
+          type: string
+        category:
+          type: string
+        type:
+          $ref: "#/components/schemas/TransactionType"
+        amount:
+          type: number
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          description: ISO timestamp
+    TransactionInput:
+      type: object
+      required:
+        - date
+        - description
+        - category
+        - type
+        - amount
+      properties:
+        date:
+          type: string
+          description: ISO date (YYYY-MM-DD)
+        description:
+          type: string
+          minLength: 1
+        category:
+          type: string
+          minLength: 1
+        type:
+          $ref: "#/components/schemas/TransactionType"
+        amount:
+          type: number
+          exclusiveMinimum: 0
+        notes:
+          type: ["string", "null"]
+    BulkDeleteInput:
+      type: object
+      required:
+        - ids
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+    Budget:
+      type: object
+      required:
+        - category
+        - limit
+        - spent
+      properties:
+        category:
+          type: string
+        limit:
+          type: number
+        spent:
+          type: number
+          description: Amount spent this month for this category
+    BudgetInput:
+      type: object
+      required:
+        - category
+        - limit
+      properties:
+        category:
+          type: string
+          minLength: 1
+        limit:
+          type: number
+          minimum: 0
+    MetricTotals:
+      type: object
+      required:
+        - income
+        - expenses
+        - savings
+        - investments
+      properties:
+        income:
+          type: number
+        expenses:
+          type: number
+        savings:
+          type: number
+        investments:
+          type: number
+    MonthlyPoint:
+      type: object
+      required:
+        - month
+        - income
+        - expenses
+        - savings
+        - investments
+      properties:
+        month:
+          type: string
+          description: Label like "Jan 2026"
+        income:
+          type: number
+        expenses:
+          type: number
+        savings:
+          type: number
+        investments:
+          type: number
+    CategoryBreakdownItem:
+      type: object
+      required:
+        - category
+        - amount
+      properties:
+        category:
+          type: string
+        amount:
+          type: number
+    SavingsPoint:
+      type: object
+      required:
+        - month
+        - savings
+      properties:
+        month:
+          type: string
+          description: Label like "Jan 2026"
+        savings:
+          type: number
+    Summary:
+      type: object
+      required:
+        - currentMonth
+        - monthlyTrend
+        - expenseByCategory
+        - savingsTrend
+        - totalInvested
+        - investedThisMonth
+        - transactionCount
+        - isSampleData
+      properties:
+        currentMonth:
+          $ref: "#/components/schemas/MetricTotals"
+        monthlyTrend:
+          type: array
+          description: Last 6 months of income/expenses/savings/investments
+          items:
+            $ref: "#/components/schemas/MonthlyPoint"
+        expenseByCategory:
+          type: array
+          description: Expense breakdown by category for the current month
+          items:
+            $ref: "#/components/schemas/CategoryBreakdownItem"
+        savingsTrend:
+          type: array
+          description: Savings over the last 12 months
+          items:
+            $ref: "#/components/schemas/SavingsPoint"
+        totalInvested:
+          type: number
+          description: Total invested across all time
+        investedThisMonth:
+          type: number
+          description: Total invested this month
+        transactionCount:
+          type: integer
+          description: Total number of transactions (0 means empty/sample-data eligible)
+        isSampleData:
+          type: boolean
+          description: True when the current data set is unmodified seeded sample data
